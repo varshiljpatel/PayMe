@@ -1,11 +1,17 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pay_me/services/payee_provider.dart';
+import 'package:pay_me/services/qr_save.dart';
 import 'package:pay_me/utils/colors_const.dart';
 import 'package:pay_me/utils/icon_const.dart';
 import 'package:pay_me/utils/size_const.dart';
+import 'package:pay_me/widgets/ui_button.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:screenshot/screenshot.dart';
 
 class QrCodeScreen extends StatefulWidget {
   static route({
@@ -24,14 +30,39 @@ class QrCodeScreen extends StatefulWidget {
 
 class _QrCodeScreenState extends State<QrCodeScreen> {
   late String upiUri;
+  final ScreenshotController _screenshotController = ScreenshotController();
+
+  Future<String> dirPath() async {
+    String? filePath;
+    Directory? dir = await getExternalStorageDirectory();
+    filePath =
+        "${dir?.path}/PayMe-${DateTime.now().microsecondsSinceEpoch}.png";
+    return filePath;
+  }
+
+  _captureImages(BuildContext context, String pn, String pa) async {
+    try {
+      Uint8List? image = await _screenshotController
+          .captureFromWidget(qrSaveWidget(context, pn, pa, upiUri));
+      String imagePath = await dirPath();
+      File(imagePath).create(recursive: false);
+      File(imagePath).writeAsBytesSync(image);
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error in sync = $e");
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     String pa = Provider.of<Payee>(context).upiId.toString();
     String pn = Provider.of<Payee>(context).payeeName.toString();
     String am = Provider.of<Payee>(context).ammount.toString();
-    String tn = "Pay to ${Provider.of<Payee>(context).payeeName.toString()} With PayMe QR Code";
-    upiUri = "upi://pay?pa=$pa&pn=${Uri.encodeComponent(pn)}&am=$am&tn=${Uri.encodeComponent(tn)}";
+    String tn =
+        "Pay to ${Provider.of<Payee>(context).payeeName.toString()} With PayMe QR Code";
+    upiUri =
+        "upi://pay?pa=$pa&pn=${Uri.encodeComponent(pn)}&am=$am&tn=${Uri.encodeComponent(tn)}";
 
     return Scaffold(
       appBar: AppBar(
@@ -106,14 +137,22 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
                 ),
               ),
             ),
-            // Positioned(
-            //     bottom: 0,
-            //     child: uiButton(
-            //         onTap: () {},
-            //         activeColor: black100,
-            //         width: getMediaWidth(context),
-            //         title: "Download",
-            //         textColor: white100)),
+            Positioned(
+                bottom: 0,
+                child: uiButton(
+                    onTap: () async {
+                      try {
+                        _captureImages(context, pn, pa);
+                      } catch (e) {
+                        if (kDebugMode) {
+                          print(e);
+                        }
+                      }
+                    },
+                    activeColor: black100,
+                    width: getMediaWidth(context),
+                    title: "Download",
+                    textColor: white100)),
           ],
         ),
       ),
