@@ -7,7 +7,9 @@ import 'package:pay_me/screens/user_details.dart';
 import 'package:pay_me/services/payee_provider.dart';
 import 'package:pay_me/utils/colors_const.dart';
 import 'package:pay_me/utils/icon_const.dart';
+import 'package:pay_me/utils/request.dart';
 import 'package:pay_me/utils/shared_prefs_keys.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -23,6 +25,7 @@ class _SplashState extends State<Splash> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 2), () {
+      requestPermission([Permission.manageExternalStorage, Permission.storage, Permission.photos]);
       checkAndNavigate();
     });
   }

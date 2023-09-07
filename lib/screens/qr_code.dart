@@ -2,13 +2,15 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:path_provider/path_provider.dart';
+// import 'package:path_provider/path_provider.dart';
 import 'package:pay_me/services/payee_provider.dart';
 import 'package:pay_me/services/qr_save.dart';
 import 'package:pay_me/utils/colors_const.dart';
 import 'package:pay_me/utils/icon_const.dart';
 import 'package:pay_me/utils/size_const.dart';
+import 'package:pay_me/utils/snake_bar.dart';
 import 'package:pay_me/widgets/ui_button.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screenshot/screenshot.dart';
@@ -32,22 +34,49 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
   late String upiUri;
   final ScreenshotController _screenshotController = ScreenshotController();
 
-  Future<String> dirPath() async {
-    String? filePath;
-    Directory? dir = await getExternalStorageDirectory();
-    filePath =
-        "${dir?.path}/PayMe-${DateTime.now().microsecondsSinceEpoch}.png";
-    return filePath;
+  Future<String?> dirPath() async {
+    try {
+      // final directory = await getExternalStorageDirectory();
+      final downloadsDirectory = Directory('/storage/emulated/0/Downloads');
+
+      // Create the 'Downloads' directory if it doesn't exist
+      if (!await downloadsDirectory.exists()) {
+        await downloadsDirectory.create(recursive: true);
+      }
+
+      final imagePath =
+          "${downloadsDirectory.path}/PayMe-${DateTime.now().microsecondsSinceEpoch}.png";
+      return imagePath;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error in dirPath: $e");
+      }
+    }
+    return null;
   }
 
   _captureImages(BuildContext context, String pn, String pa) async {
     try {
       Uint8List? image = await _screenshotController
           .captureFromWidget(qrSaveWidget(context, pn, pa, upiUri));
-      String imagePath = await dirPath();
-      File(imagePath).create(recursive: false);
-      File(imagePath).writeAsBytesSync(image);
+      String? imagePath = await dirPath();
+      if (await Permission.storage.isGranted) {
+        // Permission.photos.request();
+        if (imagePath != null) {
+          File(imagePath).create(recursive: false);
+          File(imagePath).writeAsBytesSync(image);
+        } else {
+          if (context.mounted) {
+            showSnakeBar(context: context, content: "Something is wrong!");
+          }
+        }
+      } else {
+        Permission.storage.request();
+      }
     } catch (e) {
+      if (context.mounted) {
+        showSnakeBar(context: context, content: "Something is wrong");
+      }
       if (kDebugMode) {
         print("Error in sync = $e");
       }
@@ -137,22 +166,33 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
                 ),
               ),
             ),
-            Positioned(
-                bottom: 0,
-                child: uiButton(
-                    onTap: () async {
-                      try {
-                        _captureImages(context, pn, pa);
-                      } catch (e) {
-                        if (kDebugMode) {
-                          print(e);
-                        }
-                      }
-                    },
-                    activeColor: black100,
-                    width: getMediaWidth(context),
-                    title: "Download",
-                    textColor: white100)),
+            (Platform.isAndroid)
+                ? Positioned(
+                    bottom: 0,
+                    child: uiButton(
+                        onTap: () async {
+                          try {
+                            if (context.mounted) {
+                              _captureImages(context, pn, pa);
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              showSnakeBar(
+                                  context: context,
+                                  content: "Something is wrong");
+                            }
+                            if (kDebugMode) {
+                              print(e);
+                            }
+                          }
+                        },
+                        activeColor: black100,
+                        width: getMediaWidth(context),
+                        title: "Download",
+                        textColor: white100))
+                : const SizedBox(
+                    height: 0,
+                  )
           ],
         ),
       ),
