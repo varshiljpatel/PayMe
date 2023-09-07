@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-// import 'package:path_provider/path_provider.dart';
 import 'package:pay_me/services/payee_provider.dart';
 import 'package:pay_me/services/qr_save.dart';
 import 'package:pay_me/utils/colors_const.dart';
@@ -37,11 +36,15 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
   Future<String?> dirPath() async {
     try {
       // final directory = await getExternalStorageDirectory();
-      final downloadsDirectory = Directory('/storage/emulated/0/Downloads');
+      Directory downloadsDirectory = Directory('/storage/emulated/0/Download');
 
       // Create the 'Downloads' directory if it doesn't exist
       if (!await downloadsDirectory.exists()) {
-        await downloadsDirectory.create(recursive: true);
+        downloadsDirectory = Directory('/storage/emulated/0/Downloads');
+        if (!await downloadsDirectory.exists()) {
+          downloadsDirectory = Directory('/storage/emulated/0/Download');
+          await downloadsDirectory.create(recursive: true);
+        }
       }
 
       final imagePath =
@@ -172,8 +175,11 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
                     child: uiButton(
                         onTap: () async {
                           try {
+                            await _captureImages(context, pn, pa);
                             if (context.mounted) {
-                              _captureImages(context, pn, pa);
+                              showSnakeBar(
+                                  context: context,
+                                  content: "Downloaded successfully!");
                             }
                           } catch (e) {
                             if (context.mounted) {
