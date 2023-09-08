@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
+import 'package:pay_me/screens/login.dart';
 import 'package:pay_me/screens/qr_code.dart';
 import 'package:pay_me/services/payee_provider.dart';
 import 'package:pay_me/utils/colors_const.dart';
+import 'package:pay_me/utils/shared_prefs_keys.dart';
 import 'package:pay_me/utils/size_const.dart';
+import 'package:pay_me/utils/snake_bar.dart';
 import 'package:pay_me/widgets/ui_list.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/icon_const.dart';
 
@@ -28,6 +32,79 @@ class Details extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () {
+              try {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      titlePadding: const EdgeInsets.symmetric(
+                          horizontal: 24.0, vertical: 24.0),
+                      insetPadding: const EdgeInsets.all(24),
+                      iconPadding: const EdgeInsets.only(top: 36),
+                      actionsPadding: const EdgeInsets.symmetric(
+                          vertical: 12.0, horizontal: 24.0),
+                      backgroundColor: black75,
+                      icon: Icon(
+                        Icons.logout_outlined,
+                        color: white100,
+                      ),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(0)),
+                      title: Text(
+                        "Are you want to Log out?",
+                        style: TextStyle(color: white100, fontSize: 20),
+                      ),
+                      actions: <Widget>[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              child: const Text(
+                                "Log out",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                              onPressed: () {
+                                Future<SharedPreferences> prefs =
+                                    SharedPreferences.getInstance();
+                                prefs.then((value) {
+                                  value.setString(sp_mobile_key(context), "");
+                                  value.setString(sp_upiid_key(context), "");
+                                  value.setString(
+                                      sp_payee_name_key(context), "");
+                                  value.setBool("isFirstRun", true);
+                                });
+                                Navigator.of(context)
+                                    .pushReplacement(LoginScreen.route());
+                              },
+                            ),
+                            TextButton(
+                              child: Text(
+                                "Cancel",
+                                style: TextStyle(color: white100),
+                              ),
+                              onPressed: () async {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                );
+              } catch (e) {
+                if (context.mounted) {
+                  showSnakeBar(context: context, content: "Something is wrong");
+                }
+              }
+            },
+            icon: const Icon(Icons.logout_sharp),
+            color: white100,
+          ),
+        ],
         leading: IconButton(
             onPressed: () {
               Navigator.of(context).pop();

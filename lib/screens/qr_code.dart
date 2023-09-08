@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pay_me/services/payee_provider.dart';
 import 'package:pay_me/services/qr_save.dart';
@@ -19,6 +20,7 @@ class QrCodeScreen extends StatefulWidget {
   static route({
     required BuildContext context,
   }) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     return MaterialPageRoute(builder: (context) => const QrCodeScreen());
   }
 
