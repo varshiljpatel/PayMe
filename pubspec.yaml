@@ -23,6 +23,7 @@ dependencies:
   screenshot: ^2.1.0
   path_provider: ^2.1.1
   permission_handler: ^10.4.5
+  share_plus: ^7.0.0
 
 dev_dependencies:
   flutter_test:

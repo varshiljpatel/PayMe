@@ -13,6 +13,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
 
 class QrCodeScreen extends StatefulWidget {
   static route({
@@ -68,6 +69,7 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
         if (imagePath != null) {
           File(imagePath).create(recursive: false);
           File(imagePath).writeAsBytesSync(image);
+          return imagePath;
         } else {
           if (context.mounted) {
             showSnakeBar(context: context, content: "Something is wrong!");
@@ -175,12 +177,91 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
                     child: uiButton(
                         onTap: () async {
                           try {
-                            await _captureImages(context, pn, pa);
-                            if (context.mounted) {
-                              showSnakeBar(
-                                  context: context,
-                                  content: "Downloaded successfully!");
-                            }
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  titlePadding: const EdgeInsets.symmetric(
+                                      horizontal: 24.0, vertical: 24.0),
+                                  insetPadding: const EdgeInsets.all(24),
+                                  iconPadding: const EdgeInsets.only(top: 36),
+                                  actionsPadding: const EdgeInsets.symmetric(
+                                      vertical: 12.0, horizontal: 24.0),
+                                  backgroundColor: black75,
+                                  icon: Icon(
+                                    Icons.image_outlined,
+                                    color: white100,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(0)),
+                                  title: Text(
+                                    "Download or Share image file directly.",
+                                    style: TextStyle(
+                                        color: white100, fontSize: 20),
+                                  ),
+                                  actions: <Widget>[
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        TextButton(
+                                          child: Text(
+                                            "Share",
+                                            style: TextStyle(color: white100),
+                                          ),
+                                          onPressed: () async {
+                                            XFile shareString = XFile(
+                                                await _captureImages(
+                                                    context, pn, pa));
+                                            await Share.shareXFiles(
+                                                [shareString],
+                                                text: "Share QR Code");
+                                            if (context.mounted) {
+                                              Navigator.of(context).pop();
+                                            }
+                                          },
+                                        ),
+                                        Row(
+                                          children: [
+                                            TextButton(
+                                              child: Text(
+                                                "Cancel",
+                                                style:
+                                                    TextStyle(color: white50),
+                                              ),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                            TextButton(
+                                              child: Text(
+                                                "Download",
+                                                style:
+                                                    TextStyle(color: white100),
+                                              ),
+                                              onPressed: () async {
+                                                String downloadStringPath =
+                                                    await _captureImages(
+                                                        context, pn, pa);
+                                                if (context.mounted &&
+                                                    downloadStringPath
+                                                        .isNotEmpty) {
+                                                  Navigator.of(context).pop();
+                                                  showSnakeBar(
+                                                      context: context,
+                                                      content:
+                                                          "Downloaded successfully!");
+                                                }
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
                           } catch (e) {
                             if (context.mounted) {
                               showSnakeBar(

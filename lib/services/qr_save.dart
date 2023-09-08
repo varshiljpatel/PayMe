@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pay_me/utils/colors_const.dart';
 import 'package:pay_me/utils/icon_const.dart';
-import 'package:pay_me/utils/size_const.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 Widget qrSaveWidget(BuildContext context, String pn, String pa, String upiUri) {
@@ -20,7 +19,7 @@ Widget qrSaveWidget(BuildContext context, String pn, String pa, String upiUri) {
             SvgPicture.asset(
               ic_logo_light_banner,
               colorFilter: ColorFilter.mode(black100, BlendMode.srcIn),
-              width: getMediaWidth(context) / 3,
+              width: 400 / 3,
             ),
             const SizedBox(
               height: 24,
