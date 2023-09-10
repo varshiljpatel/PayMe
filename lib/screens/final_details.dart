@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
-import 'package:pay_me/screens/login.dart';
 import 'package:pay_me/screens/qr_code.dart';
+import 'package:pay_me/screens/splash.dart';
 import 'package:pay_me/services/payee_provider.dart';
 import 'package:pay_me/utils/colors_const.dart';
 import 'package:pay_me/utils/shared_prefs_keys.dart';
@@ -76,8 +76,13 @@ class Details extends StatelessWidget {
                                       sp_payee_name_key(context), "");
                                   value.setBool("isFirstRun", true);
                                 });
+                                // Navigate back to Splash screen
                                 Navigator.of(context)
-                                    .pushReplacement(LoginScreen.route());
+                                    .pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                      builder: (context) => const Splash()),
+                                  (route) => false,
+                                );
                               },
                             ),
                             TextButton(

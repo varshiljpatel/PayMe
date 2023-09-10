@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pay_me/screens/user_details.dart';
@@ -123,7 +124,9 @@ class _LoiInScreeState extends State<LoginScreen> {
                               UserDetails.route());
                         }
                       } catch (e) {
-                        print(e);
+                        if (kDebugMode) {
+                          print(e);
+                        }
                       }
                     },
                     activeColor: black100,

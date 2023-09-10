@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:pay_me/services/payee_provider.dart';
 import 'package:pay_me/services/qr_save.dart';
 import 'package:pay_me/utils/colors_const.dart';
 import 'package:pay_me/utils/icon_const.dart';
+import 'package:pay_me/utils/request.dart';
 import 'package:pay_me/utils/size_const.dart';
 import 'package:pay_me/utils/snake_bar.dart';
 import 'package:pay_me/widgets/ui_button.dart';
@@ -20,7 +22,6 @@ class QrCodeScreen extends StatefulWidget {
   static route({
     required BuildContext context,
   }) {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     return MaterialPageRoute(builder: (context) => const QrCodeScreen());
   }
 
@@ -212,14 +213,33 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
                                             style: TextStyle(color: white100),
                                           ),
                                           onPressed: () async {
-                                            XFile shareString = XFile(
-                                                await _captureImages(
-                                                    context, pn, pa));
-                                            await Share.shareXFiles(
-                                                [shareString],
-                                                text: "Share QR Code");
-                                            if (context.mounted) {
-                                              Navigator.of(context).pop();
+                                            if ((await Permission
+                                                        .storage.isGranted ||
+                                                    await Permission
+                                                        .photos.isGranted) &&
+                                                context.mounted) {
+                                              XFile shareString = XFile(
+                                                  await _captureImages(
+                                                      context, pn, pa));
+                                              await Share.shareXFiles(
+                                                  [shareString],
+                                                  text: "Share QR Code");
+                                              if (context.mounted) {
+                                                Navigator.of(context).pop();
+                                              }
+                                            } else {
+                                              var req = requestPermission([
+                                                Permission.storage,
+                                                Permission
+                                                    .manageExternalStorage,
+                                                Permission.photos
+                                              ]);
+                                              if (context.mounted && !req) {
+                                                showSnakeBar(
+                                                    context: context,
+                                                    content:
+                                                        "Permission required");
+                                              }
                                             }
                                           },
                                         ),
@@ -242,18 +262,52 @@ class _QrCodeScreenState extends State<QrCodeScreen> {
                                                     TextStyle(color: white100),
                                               ),
                                               onPressed: () async {
-                                                String downloadStringPath =
-                                                    await _captureImages(
-                                                        context, pn, pa);
-                                                if (context.mounted &&
-                                                    downloadStringPath
-                                                        .isNotEmpty) {
-                                                  Navigator.of(context).pop();
-                                                  showSnakeBar(
-                                                      context: context,
-                                                      content:
-                                                          "Downloaded successfully!");
-                                                }
+                                                Timer(
+                                                    const Duration(seconds: 1),
+                                                    () async {
+                                                  if ((await Permission.storage
+                                                              .isGranted ||
+                                                          await Permission
+                                                              .photos
+                                                              .isGranted) &&
+                                                      context.mounted) {
+                                                    Future<String>
+                                                        downloadStringPathFuture =
+                                                        _captureImages(
+                                                            context, pn, pa);
+                                                    downloadStringPathFuture
+                                                        .then((value) {
+                                                      String
+                                                          downloadStringPath =
+                                                          value;
+                                                      if (context.mounted &&
+                                                          downloadStringPath
+                                                              .isNotEmpty) {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        showSnakeBar(
+                                                            context: context,
+                                                            content:
+                                                                "Downloaded successfully!");
+                                                      } else {
+                                                        var req =
+                                                            requestPermission([
+                                                          Permission.storage,
+                                                          Permission
+                                                              .manageExternalStorage,
+                                                          Permission.photos
+                                                        ]);
+                                                        if (!req &&
+                                                            context.mounted) {
+                                                          showSnakeBar(
+                                                              context: context,
+                                                              content:
+                                                                  "Permission required");
+                                                        }
+                                                      }
+                                                    });
+                                                  }
+                                                });
                                               },
                                             ),
                                           ],
